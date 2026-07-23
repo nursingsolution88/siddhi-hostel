@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Siddhi Hostel Management</title>
+<style>
+:root{--p:#4f46e5;--p2:#7c3aed;--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#667085;--border:#e4e7ec;--good:#15803d;--bad:#dc2626;--warn:#d97706}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial;background:var(--bg);color:var(--text)}
+header{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;padding:18px;position:sticky;top:0;z-index:5}
+.head{max-width:1250px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{margin:0;font-size:24px}.sub{opacity:.9;font-size:13px;margin-top:4px}.container{max-width:1250px;margin:22px auto;padding:0 15px 45px}
+.grid{display:grid;gap:15px}.metrics{grid-template-columns:repeat(6,1fr)}.card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(15,23,42,.07)}
+.label{font-size:12px;color:var(--muted)}.value{font-size:27px;font-weight:850;margin-top:6px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.tab{border:1px solid var(--border);background:#fff;padding:10px 14px;border-radius:10px;font-weight:750;cursor:pointer}.tab.active{background:var(--p);color:#fff}
+.panel{display:none}.panel.active{display:block}.layout{grid-template-columns:1fr 1fr;align-items:start}
+h2{font-size:18px;margin:0 0 14px}.two{grid-template-columns:1fr 1fr}.three{grid-template-columns:repeat(3,1fr)}
+label{font-size:12px;font-weight:700;color:#344054}input,select,textarea{width:100%;padding:10px 11px;border:1px solid #d0d5dd;border-radius:9px;font:inherit;background:#fff}
+textarea{min-height:75px;resize:vertical}form{display:grid;gap:11px}button,a.btn{border:0;border-radius:9px;padding:10px 12px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-block}
+.primary{background:var(--p);color:#fff}.green{background:#16a34a;color:#fff}.red{background:#fee2e2;color:#991b1b}.soft{background:#eef2ff;color:#3730a3}.orange{background:#fff7ed;color:#9a3412}
+.table-wrap{overflow:auto;border:1px solid var(--border);border-radius:13px}table{width:100%;border-collapse:collapse;min-width:980px}th,td{padding:11px;border-bottom:1px solid var(--border);font-size:13px;text-align:left}th{background:#f8fafc;color:#475467}
+.badge{font-size:11px;font-weight:800;border-radius:999px;padding:5px 8px}.due{background:#fef3c7;color:#92400e}.overdue{background:#fee2e2;color:#991b1b}.upcoming{background:#dcfce7;color:#166534}
+.rooms{grid-template-columns:repeat(6,1fr)}.room{border:1px solid var(--border);border-radius:12px;padding:12px}.room strong{display:block}.mini{font-size:12px;color:var(--muted);margin-top:5px}
+.actions{display:flex;gap:6px;flex-wrap:wrap}.searchbar{display:flex;gap:8px;margin-bottom:12px}.searchbar input{max-width:380px}.notice{background:#fffbeb;border:1px solid #fde68a;padding:12px;border-radius:11px;color:#854d0e;font-size:13px;margin-bottom:13px}
+#setupBox{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:12px;border-radius:12px;margin-bottom:14px}
+@media(max-width:1000px){.metrics{grid-template-columns:repeat(3,1fr)}.layout{grid-template-columns:1fr}.rooms{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.metrics{grid-template-columns:repeat(2,1fr)}.two,.three{grid-template-columns:1fr}.rooms{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header><div class="head"><div><h1>🏠 Siddhi Hostel</h1><div class="sub">GitHub Pages + Google Sheets + Automatic Email</div></div><div class="actions"><button class="soft" onclick="exportCsv('students')">Students CSV</button><button class="soft" onclick="exportCsv('payments')">Payments CSV</button><button class="orange" onclick="window.print()">Print / PDF</button></div></div></header>
+
+<div class="container">
+<div id="setupBox">Setup जरूरी: नीचे script में <b>APPS_SCRIPT_URL</b> में अपनी Google Apps Script Web App URL paste करें।</div>
+
+<div class="grid metrics">
+<div class="card"><div class="label">Total Rooms</div><div class="value">18</div></div>
+<div class="card"><div class="label">Total Beds</div><div class="value">54</div></div>
+<div class="card"><div class="label">Students</div><div class="value" id="mStudents">0</div></div>
+<div class="card"><div class="label">Vacant Beds</div><div class="value" id="mVacant">54</div></div>
+<div class="card"><div class="label">Due / Overdue</div><div class="value" id="mDue">0</div></div>
+<div class="card"><div class="label">This Month Income</div><div class="value" id="mIncome">₹0</div></div>
+</div>
+
+<div class="tabs">
+<button class="tab active" data-id="dashboard">Dashboard</button>
+<button class="tab" data-id="students">Students</button>
+<button class="tab" data-id="payments">Payments</button>
+<button class="tab" data-id="rooms">Rooms</button>
+</div>
+
+<section id="dashboard" class="panel active">
+<div class="grid layout">
+<div class="card"><h2>नया विद्यार्थी जोड़ें</h2>
+<form id="studentForm">
+<div class="grid two"><div><label>Student Name *</label><input name="name" required></div><div><label>Father Name</label><input name="fatherName"></div></div>
+<div class="grid two"><div><label>Mobile</label><input name="phone"></div><div><label>Email ID *</label><input type="email" name="email" required></div></div>
+<div class="grid three"><div><label>Room *</label><select name="room" id="roomSelect" required></select></div><div><label>Joining Date *</label><input type="date" name="joiningDate" required></div><div><label>Monthly Fee *</label><input type="number" name="monthlyFee" required></div></div>
+<div class="grid three"><div><label>Security Deposit</label><input type="number" name="securityDeposit" value="0"></div><div><label>Previous Due</label><input type="number" name="previousDue" value="0"></div><div><label>Aadhaar</label><input name="aadhaar"></div></div>
+<div><label>Address</label><textarea name="address"></textarea></div>
+<button class="primary">Save Student</button>
+</form></div>
+<div class="card"><h2>आज के Due Students</h2><div id="todayDue"></div></div>
+</div>
+</section>
+
+<section id="students" class="panel"><div class="card">
+<div class="searchbar"><input id="search" placeholder="Name, mobile, room, email search करें"><button class="primary" onclick="renderStudents()">Search</button></div>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Room</th><th>Email</th><th>Joining</th><th>Fee</th><th>Previous Due</th><th>Next Due</th><th>Status</th><th>Actions</th></tr></thead><tbody id="studentRows"></tbody></table></div>
+</div></section>
+
+<section id="payments" class="panel"><div class="card"><h2>Payment History</h2><div class="table-wrap"><table><thead><tr><th>Receipt</th><th>Date</th><th>Student</th><th>Room</th><th>Amount</th><th>Mode</th><th>Receipt</th></tr></thead><tbody id="paymentRows"></tbody></table></div></div></section>
+<section id="rooms" class="panel"><div class="card"><h2>Room Occupancy</h2><div id="roomGrid" class="grid rooms"></div></div></section>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+let students=[],payments=[];
+const money=n=>"₹"+Number(n||0).toLocaleString("en-IN");
+function ensureSetup(){if(APPS_SCRIPT_URL.startsWith("PASTE_")){alert("पहले APPS_SCRIPT_URL में अपनी Web App URL paste करें।");return false}return true}
+async function call(action,data={}){
+ if(!ensureSetup()) throw new Error("Setup incomplete");
+ const r=await fetch(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action,...data})});
+ const j=await r.json(); if(!j.ok) throw new Error(j.error||"Request failed"); return j.data;
+}
+async function refresh(){
+ try{
+  const data=await call("getAll");
+  students=data.students||[];payments=data.payments||[];
+  mStudents.textContent=students.filter(s=>s.active!=="No").length;
+  mVacant.textContent=54-students.filter(s=>s.active!=="No").length;
+  mDue.textContent=students.filter(s=>["due","overdue"].includes(s.statusKey)).length;
+  const month=new Date().toISOString().slice(0,7);
+  mIncome.textContent=money(payments.filter(p=>String(p.date).startsWith(month)).reduce((a,p)=>a+Number(p.amount||0),0));
+  renderStudents();renderPayments();renderRooms();renderDue();fillRooms();
+  setupBox.style.display="none";
+ }catch(e){console.error(e)}
+}
+function renderStudents(){
+ const q=(search.value||"").toLowerCase();
+ const list=students.filter(s=>[s.name,s.phone,s.email,String(s.room)].some(v=>String(v||"").toLowerCase().includes(q)));
+ studentRows.innerHTML=list.map(s=>`<tr><td><b>${s.name}</b><br><small>${s.phone||""}</small></td><td>${s.room}</td><td>${s.email}</td><td>${s.joiningDate}</td><td>${money(s.monthlyFee)}</td><td>${money(s.previousDue)}</td><td>${s.nextDue}</td><td><span class="badge ${s.statusKey}">${s.statusText}</span></td><td><div class="actions"><button class="soft" onclick="sendReminder('${s.id}')">Email</button><button class="green" onclick="pay('${s.id}')">Payment</button><button class="red" onclick="leaveStudent('${s.id}')">Left</button></div></td></tr>`).join("")||`<tr><td colspan="9">No students found.</td></tr>`;
+}
+function renderPayments(){paymentRows.innerHTML=payments.map(p=>`<tr><td>${p.receiptId}</td><td>${p.date}</td><td>${p.studentName}</td><td>${p.room}</td><td>${money(p.amount)}</td><td>${p.mode}</td><td><button class="soft" onclick='printReceipt(${JSON.stringify(p)})'>Print</button></td></tr>`).join("")||`<tr><td colspan="7">No payments.</td></tr>`}
+function renderRooms(){roomGrid.innerHTML="";for(let i=1;i<=18;i++){const list=students.filter(s=>Number(s.room)===i&&s.active!=="No");roomGrid.innerHTML+=`<div class="room"><strong>Room ${i}</strong><div class="mini">${list.length}/3 occupied</div><div class="mini">${list.map(x=>x.name).join(", ")||"Empty"}</div></div>`}}
+function renderDue(){const due=students.filter(s=>["due","overdue"].includes(s.statusKey));todayDue.innerHTML=due.length?due.map(s=>`<div style="padding:10px 0;border-bottom:1px solid #eee"><b>${s.name}</b> • Room ${s.room}<br><span class="badge ${s.statusKey}">${s.statusText}</span> Total ${money(Number(s.monthlyFee)+Number(s.previousDue||0))}<div style="margin-top:7px"><button class="soft" onclick="sendReminder('${s.id}')">Email Reminder</button></div></div>`).join(""):`<div class="notice">आज कोई due student नहीं है।</div>`}
+function fillRooms(){roomSelect.innerHTML="";for(let i=1;i<=18;i++){const c=students.filter(s=>Number(s.room)===i&&s.active!=="No").length;const o=document.createElement("option");o.value=i;o.textContent=`Room ${i} (${c}/3)`;o.disabled=c>=3;roomSelect.appendChild(o)}}
+studentForm.addEventListener("submit",async e=>{e.preventDefault();try{await call("addStudent",{student:Object.fromEntries(new FormData(e.target))});e.target.reset();e.target.joiningDate.value=new Date().toISOString().slice(0,10);alert("Student saved");refresh()}catch(e){alert(e.message)}});
+async function sendReminder(id){try{await call("sendReminder",{id});alert("Email sent")}catch(e){alert(e.message)}}
+async function leaveStudent(id){if(!confirm("Student को Left mark करना है?"))return;try{await call("leaveStudent",{id});refresh()}catch(e){alert(e.message)}}
+async function pay(id){const s=students.find(x=>x.id===id);const amount=prompt("Payment amount",Number(s.monthlyFee)+Number(s.previousDue||0));if(amount===null)return;const mode=prompt("Mode: Cash / UPI / Bank","Cash")||"Cash";try{await call("addPayment",{studentId:id,amount:Number(amount),mode});alert("Payment saved");refresh()}catch(e){alert(e.message)}}
+function printReceipt(p){const w=window.open("","_blank");w.document.write(`<body style="font-family:Arial;padding:35px"><div style="border:2px solid;padding:25px"><h1 style="text-align:center">Siddhi Hostel</h1><h3 style="text-align:center">Payment Receipt</h3><hr><p><b>Receipt:</b> ${p.receiptId}</p><p><b>Date:</b> ${p.date}</p><p><b>Student:</b> ${p.studentName}</p><p><b>Room:</b> ${p.room}</p><p><b>Amount:</b> ${money(p.amount)}</p><p><b>Mode:</b> ${p.mode}</p><br><p style="text-align:right">Authorized Signature</p></div><script>window.print()<\/script>`);w.document.close()}
+function exportCsv(type){const rows=type==="students"?students:payments;if(!rows.length)return alert("No data");const keys=Object.keys(rows[0]);const csv=[keys.join(","),...rows.map(r=>keys.map(k=>`"${String(r[k]??"").replaceAll('"','""')}"`).join(","))].join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download=`siddhi-${type}.csv`;a.click()}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab,.panel").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById(b.dataset.id).classList.add("active")});
+document.querySelector('[name="joiningDate"]').value=new Date().toISOString().slice(0,10);
+if(!APPS_SCRIPT_URL.startsWith("PASTE_"))refresh();
+</script>
+</body></html>
