@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Siddhi Hostel Management</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="toast"></div>
+
+<section id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="logo">SH</div>
+    <h1>Siddhi Hostel</h1>
+    <p>Hostel Management System</p>
+    <form id="loginForm">
+      <label>Username</label><input id="username" value="admin" required>
+      <label>Password</label><input id="password" type="password" value="admin123" required>
+      <button type="submit" class="primary full">Login</button>
+    </form>
+    <small>Demo: admin / admin123</small>
+  </div>
+</section>
+
+<div id="app" class="app hidden">
+  <aside>
+    <div class="brand"><div class="logo small">SH</div><div><b>Siddhi Hostel</b><span>Management</span></div></div>
+    <nav>
+      <button class="nav active" data-view="dashboard">Dashboard</button>
+      <button class="nav" data-view="students">Students</button>
+      <button class="nav" data-view="rooms">Rooms & Beds</button>
+      <button class="nav" data-view="fees">Fees</button>
+      <button class="nav" data-view="attendance">Attendance</button>
+      <button class="nav" data-view="visitors">Visitors</button>
+      <button class="nav" data-view="complaints">Complaints</button>
+      <button class="nav" data-view="settings">Settings</button>
+    </nav>
+    <button id="logoutBtn" class="logout">Logout</button>
+  </aside>
+
+  <main>
+    <header><div><h2 id="pageTitle">Dashboard</h2><p id="dateLabel"></p></div><div class="actions"><button id="syncBtn" class="secondary">Sync</button><button data-open="studentModal" class="primary">+ Add Student</button></div></header>
+
+    <section id="dashboard" class="view active-view">
+      <div class="kpis">
+        <article><span>Total Students</span><strong id="kpiStudents">0</strong></article>
+        <article><span>Total Beds</span><strong id="kpiBeds">0</strong></article>
+        <article><span>Vacant Beds</span><strong id="kpiVacant">0</strong></article>
+        <article><span>Occupied Beds</span><strong id="kpiOccupied">0</strong></article>
+        <article><span>Fees Collected</span><strong id="kpiCollected">₹0</strong></article>
+        <article><span>Pending Fees</span><strong id="kpiPending">₹0</strong></article>
+      </div>
+      <div class="grid2">
+        <article class="panel"><h3>Bed Occupancy</h3><div id="occupancyBar"></div></article>
+        <article class="panel"><h3>Quick Actions</h3><div class="quick"><button data-open="studentModal">New Admission</button><button data-open="feeModal">Add Fee</button><button data-open="visitorModal">Visitor Entry</button><button data-open="complaintModal">New Complaint</button></div></article>
+      </div>
+      <article class="panel"><h3>Recent Students</h3><div class="table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Course</th><th>Room</th><th>Bed</th><th>Mobile</th><th>Status</th></tr></thead><tbody id="recentStudents"></tbody></table></div></article>
+    </section>
+
+    <section id="students" class="view">
+      <div class="section-actions"><input id="studentSearch" placeholder="Search student, mobile or ID"><button data-open="studentModal" class="primary">+ Add Student</button></div>
+      <article class="panel"><div class="table-wrap"><table><thead><tr><th>Student ID</th><th>Name</th><th>Father</th><th>Course</th><th>Mobile</th><th>Room</th><th>Bed</th><th>Joining</th><th>Status</th><th>Action</th></tr></thead><tbody id="studentsBody"></tbody></table></div></article>
+    </section>
+
+    <section id="rooms" class="view">
+      <div class="section-actions"><div></div><button data-open="roomModal" class="primary">+ Add Room</button></div>
+      <div id="roomsGrid" class="rooms-grid"></div>
+    </section>
+
+    <section id="fees" class="view">
+      <div class="section-actions"><div></div><button data-open="feeModal" class="primary">+ Add Fee</button></div>
+      <article class="panel"><div class="table-wrap"><table><thead><tr><th>Receipt</th><th>Student</th><th>Date</th><th>Month</th><th>Amount</th><th>Method</th><th>Type</th><th>Remarks</th></tr></thead><tbody id="feesBody"></tbody></table></div></article>
+    </section>
+
+    <section id="attendance" class="view">
+      <div class="section-actions"><input type="date" id="attendanceDate"><button id="markAllPresent" class="secondary">Mark All Present</button></div>
+      <article class="panel"><div class="table-wrap"><table><thead><tr><th>Student</th><th>Room</th><th>Status</th><th>In Time</th><th>Out Time</th><th>Save</th></tr></thead><tbody id="attendanceBody"></tbody></table></div></article>
+    </section>
+
+    <section id="visitors" class="view">
+      <div class="section-actions"><div></div><button data-open="visitorModal" class="primary">+ Visitor Entry</button></div>
+      <article class="panel"><div class="table-wrap"><table><thead><tr><th>Visitor ID</th><th>Visitor</th><th>Student</th><th>Relation</th><th>Date</th><th>In</th><th>Out</th><th>Mobile</th></tr></thead><tbody id="visitorsBody"></tbody></table></div></article>
+    </section>
+
+    <section id="complaints" class="view">
+      <div class="section-actions"><div></div><button data-open="complaintModal" class="primary">+ New Complaint</button></div>
+      <article class="panel"><div class="table-wrap"><table><thead><tr><th>ID</th><th>Student</th><th>Room</th><th>Category</th><th>Description</th><th>Priority</th><th>Status</th><th>Action</th></tr></thead><tbody id="complaintsBody"></tbody></table></div></article>
+    </section>
+
+    <section id="settings" class="view">
+      <article class="panel settings">
+        <h3>Google Apps Script Connection</h3>
+        <label>Apps Script Web App URL</label><input id="scriptUrl" placeholder="https://script.google.com/macros/s/.../exec">
+        <label>Hostel WhatsApp Number</label><input id="hostelWhatsApp" placeholder="9198XXXXXXXX">
+        <label>Hostel Address</label><textarea id="hostelAddress"></textarea>
+        <button id="saveSettings" class="primary">Save Settings</button>
+      </article>
+    </section>
+  </main>
+</div>
+
+<dialog id="studentModal"><form id="studentForm" method="dialog" class="modal">
+  <div class="modal-head"><h3>New Student Admission</h3><button value="cancel">✕</button></div>
+  <div class="form-grid">
+    <label>Student Name<input name="studentName" required></label>
+    <label>Father Name<input name="fatherName" required></label>
+    <label>Mobile<input name="mobile" required></label>
+    <label>Parent Mobile<input name="parentMobile"></label>
+    <label>Course<input name="course" placeholder="B.Sc. Nursing"></label>
+    <label>Semester<input name="semester" placeholder="2nd Semester"></label>
+    <label>Room<select name="roomNumber" id="studentRoom" required></select></label>
+    <label>Bed<select name="bedNumber" id="studentBed" required></select></label>
+    <label>Joining Date<input type="date" name="joiningDate" required></label>
+    <label>Monthly Fee<input type="number" name="monthlyFee" required></label>
+    <label>Security Deposit<input type="number" name="securityDeposit" value="0"></label>
+    <label>Status<select name="status"><option>Active</option><option>On Leave</option><option>Inactive</option></select></label>
+  </div>
+  <label>Address<textarea name="address"></textarea></label>
+  <div class="modal-actions"><button value="cancel" class="secondary">Cancel</button><button class="primary" type="submit">Save Student</button></div>
+</form></dialog>
+
+<dialog id="roomModal"><form id="roomForm" method="dialog" class="modal">
+  <div class="modal-head"><h3>Add Hostel Room</h3><button value="cancel">✕</button></div>
+  <div class="form-grid">
+    <label>Room Number<input name="roomNumber" required></label>
+    <label>Floor<input name="floor"></label>
+    <label>Room Type<select name="roomType"><option>Single</option><option>Double Sharing</option><option>Triple Sharing</option><option>Four Sharing</option></select></label>
+    <label>Total Beds<input type="number" name="totalBeds" required min="1"></label>
+    <label>Monthly Rent<input type="number" name="monthlyRent" required></label>
+    <label>Status<select name="status"><option>Available</option><option>Full</option><option>Maintenance</option></select></label>
+  </div>
+  <div class="modal-actions"><button value="cancel" class="secondary">Cancel</button><button class="primary" type="submit">Add Room</button></div>
+</form></dialog>
+
+<dialog id="feeModal"><form id="feeForm" method="dialog" class="modal">
+  <div class="modal-head"><h3>Add Fee Payment</h3><button value="cancel">✕</button></div>
+  <div class="form-grid">
+    <label>Student<select name="studentId" id="feeStudent" required></select></label>
+    <label>Month<input type="month" name="feeMonth" required></label>
+    <label>Amount<input type="number" name="amount" required></label>
+    <label>Payment Method<select name="method"><option>Cash</option><option>UPI</option><option>Bank Transfer</option><option>Card</option></select></label>
+    <label>Payment Type<select name="type"><option>Monthly Fee</option><option>Security Deposit</option><option>Mess Fee</option><option>Fine</option><option>Other</option></select></label>
+    <label>Remarks<input name="remarks"></label>
+  </div>
+  <div class="modal-actions"><button value="cancel" class="secondary">Cancel</button><button class="primary" type="submit">Save Fee</button></div>
+</form></dialog>
+
+<dialog id="visitorModal"><form id="visitorForm" method="dialog" class="modal">
+  <div class="modal-head"><h3>Visitor Entry</h3><button value="cancel">✕</button></div>
+  <div class="form-grid">
+    <label>Visitor Name<input name="visitorName" required></label>
+    <label>Student<select name="studentId" id="visitorStudent" required></select></label>
+    <label>Relation<input name="relation"></label>
+    <label>Mobile<input name="mobile"></label>
+    <label>In Time<input type="time" name="inTime" required></label>
+    <label>Purpose<input name="purpose"></label>
+  </div>
+  <div class="modal-actions"><button value="cancel" class="secondary">Cancel</button><button class="primary" type="submit">Save Entry</button></div>
+</form></dialog>
+
+<dialog id="complaintModal"><form id="complaintForm" method="dialog" class="modal">
+  <div class="modal-head"><h3>New Complaint</h3><button value="cancel">✕</button></div>
+  <div class="form-grid">
+    <label>Student<select name="studentId" id="complaintStudent" required></select></label>
+    <label>Category<select name="category"><option>Electricity</option><option>Water</option><option>Furniture</option><option>Cleaning</option><option>Wi-Fi</option><option>Mess</option><option>Other</option></select></label>
+    <label>Priority<select name="priority"><option>Low</option><option>Medium</option><option>High</option></select></label>
+    <label>Status<select name="status"><option>Open</option><option>In Progress</option><option>Resolved</option></select></label>
+  </div>
+  <label>Description<textarea name="description" required></textarea></label>
+  <div class="modal-actions"><button value="cancel" class="secondary">Cancel</button><button class="primary" type="submit">Save Complaint</button></div>
+</form></dialog>
+
+<script src="app.js"></script>
+</body></html>
